@@ -1,0 +1,15 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Never commit normalized private data or real platform exports.
+data/
+.data/
+private-exports/
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal

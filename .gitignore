@@ -1,0 +1,18 @@
+# Local reverse-engineering references and sensitive experiment artifacts.
+third_party/
+recovery/
+experiments/wechat-4.1.7-poc/private/
+experiments/wechat-4.1.7-poc/work/
+experiments/qq-qce-docker/private/
+
+# Generated interpreter caches never belong to the project record.
+__pycache__/
+*.py[cod]
+
+# DingTalk PoC app copies, personal profile snapshots, runtime output and secrets.
+experiments/dingtalk-8.3.5-poc/evidence/
+experiments/dingtalk-8.3.5-poc/work/
+experiments/dingtalk-8.3.5-poc/receipts/
+experiments/dingtalk-8.3.5-poc/private/
+experiments/dingtalk-8.3.5-poc/dns_cache_file
+experiments/dingtalk-8.3.5-poc/scripts/offline-probe.sb

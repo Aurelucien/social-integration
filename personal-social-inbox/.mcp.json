@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "personal-social-inbox": {
+      "title": "Personal Social Inbox",
+      "description": "Read-only access to imported personal message evidence, source status, and review-required event candidates.",
+      "cwd": ".",
+      "command": "python3",
+      "args": [
+        "./server.py"
+      ]
+    }
+  }
+}

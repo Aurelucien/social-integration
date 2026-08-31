@@ -1,0 +1,13 @@
+{
+  "preferredFormats": [
+    "json"
+  ],
+  "customOutputDir": "/app/QQChatExporter/exports",
+  "customScheduledExportDir": "/app/QQChatExporter/scheduled-exports",
+  "autoBackup": true,
+  "backupRetentionDays": 30,
+  "resourceLinkStrategy": "download",
+  "includeSystemMessages": true,
+  "filterPureImageMessages": false,
+  "enableNotifications": false
+}

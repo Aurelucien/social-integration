@@ -1,0 +1,92 @@
+{
+  "schema_version": "social-inbox-import/v1",
+  "exported_at": "2026-08-30T08:30:00Z",
+  "source": {
+    "kind": "fixture",
+    "account_id": "sample-personal-account",
+    "display_name": "Sample Personal Account"
+  },
+  "conversations": [
+    {
+      "source_conversation_id": "family-chat",
+      "title": "Family",
+      "type": "group",
+      "last_activity": "2026-08-30T07:03:00Z",
+      "participants_complete": true,
+      "participant_scope": "current_roster",
+      "metadata": {"unread_count": 2, "is_hidden": false},
+      "group": {
+        "owner_id": "me",
+        "member_count": 2,
+        "membership_status": "complete",
+        "announcement": "Dinner schedule"
+      },
+      "participants": [
+        {"source_identity_id": "me", "display_name": "Me", "is_self": true, "role": "owner", "membership": {"current": true}},
+        {"source_identity_id": "alice", "display_name": "Alice", "is_self": false, "role": "member", "membership": {"current": true}}
+      ],
+      "messages": [
+        {
+          "source_message_id": "family-001",
+          "timestamp": "2026-08-30T07:00:00Z",
+          "sender_id": "alice",
+          "sender_name": "Alice",
+          "direction": "incoming",
+          "parts": [{"type": "text", "text": "Dinner is at seven tonight."}]
+        },
+        {
+          "source_message_id": "family-002",
+          "timestamp": "2026-08-30T07:02:00Z",
+          "sender_id": "me",
+          "sender_name": "Me",
+          "direction": "outgoing",
+          "parts": [
+            {"type": "text", "text": "Got it. I will bring the shopping list."},
+            {
+              "type": "file",
+              "path": "attachments/shopping-list.txt",
+              "file_name": "shopping-list.txt",
+              "mime_type": "text/plain"
+            }
+          ]
+        },
+        {
+          "source_message_id": "family-003",
+          "timestamp": "2026-08-30T07:03:00Z",
+          "sender_id": "alice",
+          "sender_name": "Alice",
+          "direction": "incoming",
+          "parts": [
+            {
+              "type": "audio",
+              "path": "attachments/not-downloaded.m4a",
+              "file_name": "voice-note.m4a",
+              "mime_type": "audio/mp4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "work-chat",
+      "title": "Project Check-in",
+      "type": "single",
+      "last_activity": "2026-08-30T08:00:00Z",
+      "metadata": {"unread_count": 0, "is_hidden": false},
+      "participants": [
+        {"source_identity_id": "me", "display_name": "Me", "is_self": true},
+        {"source_identity_id": "bob", "display_name": "Bob", "is_self": false}
+      ],
+      "messages": [
+        {
+          "source_message_id": "work-001",
+          "timestamp": "2026-08-30T08:00:00Z",
+          "sender_id": "bob",
+          "sender_name": "Bob",
+          "direction": "incoming",
+          "parts": [{"type": "text", "text": "Please review the draft before Monday."}]
+        }
+      ]
+    }
+  ]
+}

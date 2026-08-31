@@ -1,0 +1,27 @@
+name: personal-social-inbox-qq
+
+services:
+  qce:
+    image: ghcr.io/shuakami/napcat-qce:v6.2.8@sha256:b5d4be820d2d097475981c3b1f3870e699ebfc73439d928ff174d24ea2780753
+    platform: linux/amd64
+    container_name: personal-social-inbox-qq-qce
+    restart: "no"
+    environment:
+      ACCOUNT: ""
+      DOCKER_CONTAINER: "true"
+      QCE_NO_AUTO_OPEN: "1"
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:40653:40653"
+      - "127.0.0.1:6099:6099"
+    volumes:
+      - qq-session:/app/.config/QQ
+      - qce-data:/app/.qq-chat-exporter
+      - napcat-config:/app/napcat/config
+      - exports:/app/QQChatExporter
+
+volumes:
+  qq-session:
+  qce-data:
+  napcat-config:
+  exports:

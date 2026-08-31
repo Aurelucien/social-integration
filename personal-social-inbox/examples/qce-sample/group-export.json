@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "exporter": "QQ Chat Exporter",
+    "fixture": "synthetic"
+  },
+  "chatInfo": {
+    "name": "Synthetic Reading Group",
+    "type": "group",
+    "selfUid": "uid-self-example",
+    "selfUin": "90001",
+    "selfName": "Example Self",
+    "peerUid": "group-uid-example",
+    "peerUin": "10001",
+    "participantCount": 3
+  },
+  "statistics": {
+    "messageCount": 3
+  },
+  "messages": [
+    {
+      "id": "msg-before-window",
+      "seq": 1,
+      "timestamp": 1787961600000,
+      "time": "2026-08-29 00:00:00",
+      "sender": {
+        "uid": "uid-member-example",
+        "uin": "90002",
+        "name": "Example Member"
+      },
+      "type": "text",
+      "content": {
+        "text": "Synthetic message before the selected window.",
+        "elements": [],
+        "resources": [],
+        "mentions": []
+      },
+      "recalled": false,
+      "system": false
+    },
+    {
+      "id": "msg-incoming",
+      "seq": 2,
+      "timestamp": 1788004800000,
+      "time": "2026-08-29 12:00:00",
+      "sender": {
+        "uid": "uid-member-example",
+        "uin": "90002",
+        "name": "Example Member",
+        "groupCard": "Reader"
+      },
+      "type": "mixed",
+      "content": {
+        "text": "Synthetic group note.",
+        "elements": [],
+        "resources": [
+          {
+            "type": "file",
+            "filename": "group-note.txt",
+            "size": 30,
+            "localPath": "resources/group-note.txt"
+          }
+        ],
+        "mentions": []
+      },
+      "recalled": false,
+      "system": false
+    },
+    {
+      "id": "msg-outgoing",
+      "seq": 3,
+      "timestamp": 1788048000000,
+      "time": "2026-08-30 00:00:00",
+      "sender": {
+        "uid": "uid-self-example",
+        "uin": "90001",
+        "name": "Example Self"
+      },
+      "type": "image",
+      "content": {
+        "text": "Synthetic reply with a deliberately missing image.",
+        "elements": [],
+        "resources": [
+          {
+            "type": "image",
+            "filename": "missing-image.png",
+            "localPath": "resources/missing-image.png"
+          }
+        ],
+        "mentions": []
+      },
+      "recalled": false,
+      "system": false
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "personal-social-inbox",
+  "version": "0.2.0",
+  "description": "Local, read-only aggregation of personal messaging exports for agent search and review-required event monitoring.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Personal Social Inbox",
+    "shortDescription": "Read personal message exports in one local inbox.",
+    "longDescription": "Imports explicitly selected personal messaging exports into a provenance-preserving local store and exposes read-only source status, conversation, search, context, attachment, digest, and review-required event candidate tools to Codex.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "Read-only",
+      "Local data",
+      "Search",
+      "Attachments",
+      "Event monitoring"
+    ],
+    "defaultPrompt": [
+      "Show my most recent imported conversations.",
+      "Search my imported messages and include source references.",
+      "Check for review-required signup or deadline candidates and show their evidence.",
+      "Build an evidence-backed digest of my imported messages."
+    ],
+    "brandColor": "#315C4C"
+  },
+  "mcpServers": "./.mcp.json"
+}
