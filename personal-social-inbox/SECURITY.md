@@ -28,6 +28,13 @@ outside version control.
   may not escape that root, output may not be placed inside it, and source file
   size/inode/mtime must remain stable across the copy. No directory-wide
   filename matching or URL download is performed.
+- Collector heartbeat configuration is an explicit local capability. WeChat and
+  DingTalk require selected source roots; QQ may be readiness-only or observe one
+  selected completed host-side export batch. Detectors read metadata only, run
+  serially per source, and do not capture, decrypt, import, log in, or download.
+- Heartbeat records and transition events exclude raw source paths, message
+  content, credentials, QQ tokens, and account-security responses. A heartbeat
+  is not evidence that a generation or import completed.
 
 ## Current limitations
 
@@ -41,6 +48,9 @@ outside version control.
   not the original JPG resources, and the observed file body is unavailable at
   its recorded path. Card types with no validated title or description remain
   explicit system placeholders instead of guessed content.
+- The foreground supervisor is not a durable service manager. It installs no
+  launch agent, has no automatic restart, and reports stale state after its
+  configured heartbeat window expires.
 
 Do not add credential capture, operating-system security changes, live client
 inspection, or write operations under the existing read-only project scope.

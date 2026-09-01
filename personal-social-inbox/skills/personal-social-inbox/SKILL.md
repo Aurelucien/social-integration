@@ -44,9 +44,12 @@ the user has already imported.
   their contents from filenames.
 - Literal search is not semantic search. Say when no literal match was found.
 - Check `social_get_source_status` before claiming that no recent or important
-  item exists. `IMPORTED_EVIDENCE_AVAILABLE` establishes local coverage only;
-  `collector_freshness_state: NOT_RECORDED` means live-source freshness is
-  unknown.
+  item exists. `IMPORTED_EVIDENCE_AVAILABLE` establishes local coverage only.
+  Preserve the collector distinctions: `NOT_RECORDED` means no heartbeat;
+  `COLLECTOR_ACTIVE_SOURCE_UNOBSERVED` is readiness only; `SOURCE_OBSERVED`
+  records recent metadata observation; generation and import timestamps remain
+  separate; `HEARTBEAT_STALE`, `COLLECTOR_ERROR`, and `REQUIRES_USER_ACTION`
+  must not be presented as current source coverage.
 - Important-event candidates are derived and start `REVIEW_REQUIRED`. Read the
   candidate with `social_get_event_candidate`, inspect its unchanged message
   evidence and context, and preserve uncertain or unresolved time fields.
@@ -71,6 +74,12 @@ Docker QCE environment, while `qq-capture-generation` and
 distinction between image present, container running, WebUI ready, human login
 confirmed, group scope configured, export complete, generation verified, and
 import complete.
+
+The local `collector-heartbeat` CLI is an explicitly configured foreground
+metadata observer. It runs source workers asynchronously but serializes each
+individual source. It does not capture, decrypt, import, install persistence, or
+turn readiness into source freshness. Its configuration and execution are local
+operations, not MCP capabilities.
 
 For a broad review, start with `social_get_source_status`, then
 `social_list_conversations`, narrow with

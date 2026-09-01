@@ -1,0 +1,30 @@
+{
+  "schema": "personal-social-inbox/collector-config/v1",
+  "detectors": [
+    {
+      "id": "wechat-personal",
+      "source_kind": "wechat",
+      "account_id": "personal-wechat",
+      "source_root": "/path/to/explicitly-authorized/wechat/db_storage",
+      "interval_seconds": 2,
+      "stale_after_seconds": 30
+    },
+    {
+      "id": "dingtalk-personal",
+      "source_kind": "dingtalk",
+      "account_id": "personal-dingtalk",
+      "source_root": "/path/to/explicitly-authorized/dingtalk/profile",
+      "interval_seconds": 15,
+      "stale_after_seconds": 90
+    },
+    {
+      "id": "qq-personal",
+      "source_kind": "qq",
+      "account_id": "personal-qq",
+      "source_root": "/path/to/explicitly-selected/completed/qce-batch",
+      "interval_seconds": 60,
+      "stale_after_seconds": 300,
+      "max_files": 20000
+    }
+  ]
+}

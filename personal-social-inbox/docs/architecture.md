@@ -95,6 +95,33 @@ The MCP server exposes exactly nine tools:
 
 Import is intentionally not an MCP tool. It is an explicit local CLI action.
 All cursors are opaque, all limits are bounded, and attachment embedding is
-size-limited. Source status distinguishes local import coverage from collector
-freshness; until a collector heartbeat ledger exists, it reports freshness as
-`NOT_RECORDED` rather than inferring it from message timestamps.
+size-limited.
+
+## Collector heartbeat boundary
+
+The collector supervisor has one asynchronous worker per configured source and
+a serialized SQLite write boundary. Workers may overlap across WeChat,
+DingTalk, and QQ, but one worker never overlaps two observations for the same
+detector. Blocking filesystem and Docker readiness probes run outside the event
+loop.
+
+The supervisor only records explicitly selected source/export metadata or
+redacted acquisition readiness. It never reads message rows, captures or
+decrypts databases, logs in, downloads remote attachments, or invokes an ingest
+command. Existing receipt-bound ingestion may update the matching heartbeat row
+after it completes successfully.
+
+`collector_heartbeats` holds the current bounded state; `collector_events`
+records state, token, error, and import transitions without recording raw paths,
+account credentials, message text, or file contents. Source status keeps these
+facts separate:
+
+```text
+worker heartbeat != source observation != generation complete != import complete
+```
+
+Recent readiness-only QQ observation therefore reports
+`COLLECTOR_ACTIVE_SOURCE_UNOBSERVED`, not source freshness. A stale heartbeat
+reports `HEARTBEAT_STALE`; message timestamps never substitute for a collector
+observation. Sources without a bound detector continue to report
+`NOT_RECORDED`.

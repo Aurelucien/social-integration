@@ -190,6 +190,52 @@ CREATE TABLE IF NOT EXISTS monitor_message_state (
     PRIMARY KEY(rule_id, message_id)
 );
 
+CREATE TABLE IF NOT EXISTS collector_heartbeats (
+    detector_id TEXT PRIMARY KEY,
+    source_kind TEXT NOT NULL,
+    external_account_id TEXT NOT NULL,
+    observation_scope TEXT NOT NULL CHECK(observation_scope IN (
+        'source_profile_metadata',
+        'explicit_export_metadata',
+        'acquisition_readiness'
+    )),
+    state TEXT NOT NULL CHECK(state IN (
+        'BASELINE_ESTABLISHED',
+        'OK_UNCHANGED',
+        'CHANGE_OBSERVED',
+        'REQUIRES_USER_ACTION',
+        'RETRYABLE_ERROR'
+    )),
+    worker_heartbeat_at TEXT NOT NULL,
+    source_observed_at TEXT,
+    last_change_at TEXT,
+    source_token TEXT,
+    last_generation_id TEXT,
+    generation_complete_at TEXT,
+    last_import_at TEXT,
+    consecutive_failures INTEGER NOT NULL DEFAULT 0,
+    next_retry_at TEXT,
+    error_code TEXT,
+    stale_after_seconds REAL NOT NULL CHECK(stale_after_seconds > 0),
+    details_json TEXT NOT NULL DEFAULT '{}',
+    updated_at TEXT NOT NULL,
+    UNIQUE(source_kind, external_account_id)
+);
+
+CREATE TABLE IF NOT EXISTS collector_events (
+    id TEXT PRIMARY KEY,
+    detector_id TEXT NOT NULL REFERENCES collector_heartbeats(detector_id),
+    occurred_at TEXT NOT NULL,
+    state TEXT NOT NULL,
+    observation_scope TEXT NOT NULL,
+    source_token TEXT,
+    error_code TEXT,
+    details_json TEXT NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS collector_events_detector_time
+ON collector_events(detector_id, occurred_at, id);
+
 CREATE VIRTUAL TABLE IF NOT EXISTS message_fts USING fts5(
     message_id UNINDEXED,
     body,
@@ -231,5 +277,8 @@ def initialize(connection: sqlite3.Connection) -> None:
     )
     connection.execute(
         "INSERT OR IGNORE INTO schema_info(version, applied_at) VALUES(3, datetime('now'))"
+    )
+    connection.execute(
+        "INSERT OR IGNORE INTO schema_info(version, applied_at) VALUES(4, datetime('now'))"
     )
     connection.commit()

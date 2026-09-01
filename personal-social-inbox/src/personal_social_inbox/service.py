@@ -43,6 +43,49 @@ def _json_object(value: str) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
+def _collector_status(row: sqlite3.Row | dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    heartbeat = dict(row)
+    now = datetime.now(timezone.utc)
+    try:
+        observed = datetime.fromisoformat(
+            str(heartbeat["worker_heartbeat_at"]).replace("Z", "+00:00")
+        ).astimezone(timezone.utc)
+        stale = (now - observed).total_seconds() > float(
+            heartbeat["stale_after_seconds"]
+        )
+    except (TypeError, ValueError):
+        stale = True
+    if stale:
+        freshness = "HEARTBEAT_STALE"
+    elif heartbeat["state"] == "RETRYABLE_ERROR":
+        freshness = "COLLECTOR_ERROR"
+    elif heartbeat["state"] == "REQUIRES_USER_ACTION":
+        freshness = "REQUIRES_USER_ACTION"
+    elif heartbeat["observation_scope"] == "acquisition_readiness":
+        freshness = "COLLECTOR_ACTIVE_SOURCE_UNOBSERVED"
+    else:
+        freshness = "SOURCE_OBSERVED"
+    public = {
+        key: heartbeat[key]
+        for key in (
+            "detector_id",
+            "observation_scope",
+            "state",
+            "worker_heartbeat_at",
+            "source_observed_at",
+            "last_change_at",
+            "last_generation_id",
+            "generation_complete_at",
+            "last_import_at",
+            "consecutive_failures",
+            "next_retry_at",
+            "error_code",
+            "stale_after_seconds",
+        )
+    }
+    return freshness, public
+
+
 def _query_signature(namespace: str, values: dict[str, Any]) -> str:
     canonical = json.dumps(
         {"namespace": namespace, "values": values},
@@ -153,6 +196,25 @@ class InboxService:
             params,
         ).fetchall()
 
+        heartbeat_conditions = ["source_kind = ?"] if source_kind is not None else []
+        heartbeat_where = (
+            f"WHERE {' AND '.join(heartbeat_conditions)}"
+            if heartbeat_conditions
+            else ""
+        )
+        heartbeat_rows = self.connection.execute(
+            f"""
+            SELECT * FROM collector_heartbeats
+            {heartbeat_where}
+            ORDER BY source_kind, detector_id
+            """,
+            params,
+        ).fetchall()
+        heartbeats = {
+            (row["source_kind"], row["external_account_id"]): row
+            for row in heartbeat_rows
+        }
+
         items: list[dict[str, Any]] = []
         for row in rows:
             item = dict(row)
@@ -162,19 +224,51 @@ class InboxService:
                 item["availability_state"] = "IMPORTED_EVIDENCE_AVAILABLE"
             else:
                 item["availability_state"] = "NO_SUCCESSFUL_IMPORT"
-            # Import receipts establish what is locally available, but the core
-            # has no collector heartbeat yet. Do not infer live-source freshness
-            # from an old or quiet conversation's latest message timestamp.
-            item["collector_freshness_state"] = "NOT_RECORDED"
+            heartbeat = heartbeats.pop(
+                (item["source_kind"], item["external_account_id"]), None
+            )
+            if heartbeat is None:
+                # Import receipts establish what is locally available. Do not
+                # infer live-source freshness from message timestamps.
+                item["collector_freshness_state"] = "NOT_RECORDED"
+            else:
+                freshness, collector = _collector_status(heartbeat)
+                item["collector_freshness_state"] = freshness
+                item["collector"] = collector
             items.append(item)
+
+        for (heartbeat_kind, account_id), heartbeat in heartbeats.items():
+            freshness, collector = _collector_status(heartbeat)
+            items.append(
+                {
+                    "source_id": None,
+                    "source_kind": heartbeat_kind,
+                    "external_account_id": account_id,
+                    "display_name": None,
+                    "created_at": None,
+                    "updated_at": None,
+                    "conversation_count": 0,
+                    "message_count": 0,
+                    "latest_message_at": None,
+                    "successful_import_count": 0,
+                    "last_successful_import_at": None,
+                    "latest_exported_at": None,
+                    "incomplete_import_count": 0,
+                    "availability_state": "NO_SUCCESSFUL_IMPORT",
+                    "collector_freshness_state": freshness,
+                    "collector": collector,
+                }
+            )
+        items.sort(key=lambda item: (item["source_kind"], item["source_id"] or ""))
 
         return {
             "observed_at": datetime.now(timezone.utc).isoformat().replace(
                 "+00:00", "Z"
             ),
             "freshness_semantics": (
-                "Import timestamps describe local evidence only; collector "
-                "heartbeat and source lag are not recorded yet."
+                "Import timestamps describe local evidence only. Collector heartbeat "
+                "reports worker/source observation separately and never infers live "
+                "source freshness from message timestamps."
             ),
             "items": items,
         }

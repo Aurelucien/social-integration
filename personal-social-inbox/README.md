@@ -173,6 +173,48 @@ Message search/context responses expose the preserved message extension as
 cache variant, source size, and source SHA-256 when present. Attachment content
 continues to use the existing bounded, digest-checked read interface.
 
+## Collector heartbeat
+
+The collector supervisor runs WeChat, DingTalk, and QQ detectors concurrently,
+while each individual detector remains serial: a new observation never overlaps
+the previous observation for the same source. Detector observations read only
+file metadata beneath explicitly selected roots. They do not capture, decrypt,
+normalize, or import messages.
+
+Copy `examples/collector-config.example.json` outside version control, replace
+its placeholder roots and account bindings, and keep the resulting file private.
+On POSIX systems, mode `0600` is recommended. Test all configured detectors once:
+
+```bash
+python3 social_inbox.py --data-home /path/to/normalized \
+  collector-heartbeat --config /path/to/private-collector.json --once
+```
+
+Run the same command without `--once` for a foreground asynchronous supervisor.
+It prints JSON only when a detector changes state or observes a different source
+fingerprint. Stop it with an interrupt; no launch agent, background daemon, or
+automatic restart is installed by this project. Failed observations use bounded
+exponential backoff without overlapping another run of the same detector.
+
+WeChat requires an explicitly authorized `db_storage` root and fingerprints the
+fixed database/WAL paths used by the accepted 4.1.7 prototype. DingTalk requires
+an explicitly authorized profile and observes only `DBFiles/dingtalk.db`, its
+WAL, and `user_config`. QQ always runs the redacted Docker/QCE readiness check;
+when `source_root` is supplied it also fingerprints one explicitly selected,
+completed host-side QCE batch. Omitting QQ `source_root` records acquisition
+readiness only and cannot establish source-export freshness.
+
+Heartbeat, source observation, generation completion, and normalized import are
+separate facts. Successful existing `*-ingest-generation` commands update the
+matching detector's generation ID and import timestamp, but the supervisor never
+invokes those commands itself. `social_get_source_status` reports one of:
+
+- `NOT_RECORDED` when no detector is bound;
+- `SOURCE_OBSERVED` for a recent source/export metadata observation;
+- `COLLECTOR_ACTIVE_SOURCE_UNOBSERVED` for recent readiness-only observation;
+- `REQUIRES_USER_ACTION` or `COLLECTOR_ERROR` for a recent failed state;
+- `HEARTBEAT_STALE` when the detector missed its configured freshness window.
+
 ## Quick start
 
 Initialize an isolated data directory:

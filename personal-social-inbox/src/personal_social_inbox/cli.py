@@ -5,6 +5,7 @@ import json
 import sqlite3
 from pathlib import Path
 
+from .collector import CollectorConfigError, HeartbeatLedger, run_collector
 from .database import connect, initialize
 from .dingtalk_835_adapter import DingTalkAdapterError, export_dingtalk_snapshot
 from .dingtalk_generation import (
@@ -56,6 +57,16 @@ def build_parser() -> argparse.ArgumentParser:
         default="signup-deadline-v1",
     )
     monitor_parser.add_argument("--max-messages", type=int, default=50000)
+    collector_parser = subparsers.add_parser(
+        "collector-heartbeat",
+        help="Run asynchronous read-only heartbeat detectors from an explicit config.",
+    )
+    collector_parser.add_argument("--config", required=True, type=Path)
+    collector_parser.add_argument(
+        "--once",
+        action="store_true",
+        help="Observe every configured detector once and exit.",
+    )
     doctor_parser = subparsers.add_parser(
         "wechat-doctor",
         help="Inspect local WeChat acquisition readiness without reading messages or keys.",
@@ -327,6 +338,15 @@ def main(argv: list[str] | None = None) -> int:
         ) as exc:
             print(json.dumps({"status": "error", "error": str(exc)}, ensure_ascii=False))
             return 2
+    elif args.command == "collector-heartbeat":
+        home = (args.data_home or default_data_home()).resolve()
+        try:
+            result = run_collector(args.config, home, once=args.once)
+        except CollectorConfigError as exc:
+            print(json.dumps({"status": "error", "error": str(exc)}, ensure_ascii=False))
+            return 2
+        except KeyboardInterrupt:
+            result = {"status": "STOPPED", "reason": "user_interrupt"}
     else:
         home = (args.data_home or default_data_home()).resolve()
     if args.command == "init":
@@ -349,5 +369,28 @@ def main(argv: list[str] | None = None) -> int:
         except (MonitoringError, OSError, sqlite3.Error) as exc:
             print(json.dumps({"status": "error", "error": str(exc)}, ensure_ascii=False))
             return 2
+    if args.command in {
+        "wechat-ingest-generation",
+        "dingtalk-ingest-generation",
+        "qq-ingest-generation",
+    } and result.get("status") == "complete":
+        source_kind = {
+            "wechat-ingest-generation": "wechat",
+            "dingtalk-ingest-generation": "dingtalk",
+            "qq-ingest-generation": "qq",
+        }[args.command]
+        try:
+            result["collector_lifecycle_recorded"] = HeartbeatLedger(
+                home
+            ).record_lifecycle(
+                source_kind,
+                args.account_id,
+                result["generation_id"],
+            )
+        except (OSError, sqlite3.Error):
+            # The receipt-bound import has already completed. An auxiliary
+            # heartbeat update must not turn that success into a failed import.
+            result["collector_lifecycle_recorded"] = False
+            result["collector_lifecycle_error_code"] = "HEARTBEAT_LEDGER_UNAVAILABLE"
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     return 0

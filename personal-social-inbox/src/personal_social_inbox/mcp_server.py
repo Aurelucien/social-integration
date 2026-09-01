@@ -13,8 +13,8 @@ from .service import InboxService, QueryError
 TOOL_DEFINITIONS = [
     {
         "name": "social_get_source_status",
-        "title": "Inspect imported source status",
-        "description": "Report per-source imported evidence coverage and timestamps without claiming unobserved collector freshness.",
+        "title": "Inspect source and collector status",
+        "description": "Report imported evidence coverage, collector heartbeat, and source observation without inferring freshness from message timestamps.",
         "inputSchema": {
             "type": "object",
             "properties": {
